@@ -53,8 +53,8 @@ namespace Harvest.Persistence
             {
                 using var document = SaveEnvelope.ValidateJson(Utf8.GetBytes(envelope.Payload), true);
                 var root = document.RootElement;
-                StrictJson.Keys(root, "sessionSchemaVersion", "executionState", "mode", "campaignChapter", "editor", "world", "scripts");
                 if (root.GetProperty("sessionSchemaVersion").GetInt32() != 1) throw new SaveException("UnsupportedSchema", "Unsupported stopped-session schema.");
+                StrictJson.Keys(root, "sessionSchemaVersion", "executionState", "mode", "campaignChapter", "editor", "world", "scripts");
                 if (StrictJson.Text(root, "executionState", 16) != "stopped") throw new SaveException("InvalidSnapshot", "Session must be stopped.");
                 var mode = StrictJson.EnumValue<SessionMode>(root, "mode");
                 var editor = root.GetProperty("editor"); StrictJson.Keys(editor, "selectedActorId");

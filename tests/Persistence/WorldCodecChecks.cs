@@ -23,6 +23,7 @@ internal static class WorldCodecChecks
         reject(() => DomainWorldCodec.DecodeStopped(json.Replace("\"heading\":\"West\"", "\"heading\":\"4\""), rules), "Corrupt");
         reject(() => DomainWorldCodec.DecodeStopped(json.Replace("\"actorId\":17", "\"actorId\":9"), rules), "InvalidSnapshot");
         reject(() => DomainWorldCodec.DecodeStopped(json.Replace("\"worldSchemaVersion\":1", "\"worldSchemaVersion\":2"), rules), "UnsupportedSchema");
+        reject(() => DomainWorldCodec.DecodeStopped(json.Replace("\"worldSchemaVersion\":1", "\"worldSchemaVersion\":2,\"futureWorldField\":true"), rules), "UnsupportedSchema");
         reject(() => DomainWorldCodec.DecodeStopped(json.Replace("\"fuel\":7", "\"fuel\":1000001"), rules), "InvalidSnapshot");
         reject(() => DomainWorldCodec.DecodeStopped(json.Replace("\"tick\":123456789012", "\"tick\":9223372036854775808"), rules), "Corrupt");
         reject(() => DomainWorldCodec.DecodeStopped(json.Replace("\"executionState\":\"stopped\"", "\"executionState\":\"running\""), rules), "InvalidSnapshot");

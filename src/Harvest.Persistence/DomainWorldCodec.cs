@@ -58,8 +58,8 @@ namespace Harvest.Persistence
                 if (json == null || Utf8.GetByteCount(json) > SaveEnvelope.MaxFileBytes) throw new SaveException("LimitExceeded", "World exceeds save bound.");
                 using var document = SaveEnvelope.ValidateJson(Utf8.GetBytes(json), true);
                 var root = document.RootElement;
-                StrictJson.Keys(root, "worldSchemaVersion", "executionState", "rules", "tick", "width", "height", "rngAlgorithm", "rngState", "nextActorId", "tiles", "tractors", "depots");
                 if (root.GetProperty("worldSchemaVersion").GetInt32() != 1) throw new SaveException("UnsupportedSchema", "Unsupported world schema.");
+                StrictJson.Keys(root, "worldSchemaVersion", "executionState", "rules", "tick", "width", "height", "rngAlgorithm", "rngState", "nextActorId", "tiles", "tractors", "depots");
                 if (StrictJson.Text(root, "executionState", 16) != "stopped") throw new SaveException("InvalidSnapshot", "World is not stopped.");
                 ReadAndMatchRules(root.GetProperty("rules"), expectedRules);
                 var tiles = new List<TileState>();

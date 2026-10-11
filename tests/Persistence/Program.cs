@@ -30,6 +30,7 @@ internal static class Program
         Check(SaveEnvelope.Decode(encoded).Payload == Envelope(0).Payload, "Envelope roundtrip");
         var text = Encoding.UTF8.GetString(encoded);
         Reject(() => SaveEnvelope.Decode(Encoding.UTF8.GetBytes(text.Replace("\"schemaVersion\":1", "\"schemaVersion\":2"))), "UnsupportedSchema");
+        Reject(() => SaveEnvelope.Decode(Encoding.UTF8.GetBytes(text.Replace("\"schemaVersion\":1", "\"schemaVersion\":2,\"futureField\":true"))), "UnsupportedSchema");
         Reject(() => SaveEnvelope.Decode(Encoding.UTF8.GetBytes(text.Replace("\"schemaVersion\":1", "\"schemaVersion\":1,\"schemaVersion\":1"))), "Corrupt");
         Reject(() => SaveEnvelope.Decode(Encoding.UTF8.GetBytes(text.Replace("\"schemaVersion\":1", "\"schemaVersion\":1,\"unexpected\":0"))), "Corrupt");
         Reject(() => SaveEnvelope.Decode(Encoding.UTF8.GetBytes(text.Replace("spike-1", "spike-1\""))), "Corrupt");
@@ -61,7 +62,7 @@ internal static class Program
             Reject(() => store.ReadRecovery("campaign", Path.Combine(directory, "other.save.bak")), "InvalidSlot");
             Reject(() => store.Save("campaign", SaveEnvelope.Create("v", "c", "{\"executionState\":\"running\"}")), "InvalidSnapshot");
             Check(store.Load("campaign").Primary!.Payload == Envelope(2).Payload, "Invalid snapshot leaves primary untouched");
-            var future = Encoding.UTF8.GetString(Envelope(3).Encode()).Replace("\"schemaVersion\":1", "\"schemaVersion\":2");
+            var future = Encoding.UTF8.GetString(Envelope(3).Encode()).Replace("\"schemaVersion\":1", "\"schemaVersion\":2,\"futureField\":true");
             File.WriteAllText(Path.Combine(directory, "campaign.save"), future);
             Reject(() => store.Save("campaign", Envelope(4)), "UnsupportedSchema");
             Check(File.ReadAllText(Path.Combine(directory, "campaign.save")) == future, "Future primary not overwritten");

@@ -54,12 +54,13 @@ namespace Harvest.Persistence
             {
                 using var document = ValidateJson(bytes, true);
                 var root = document.RootElement;
+                if (!root.TryGetProperty("format", out var format) || format.GetString() != "harvest-codex-save") throw new SaveException("Corrupt", "Invalid format.");
+                if (!root.TryGetProperty("schemaVersion", out var version)) throw new SaveException("Corrupt", "Missing schema version.");
+                if (version.GetInt32() != 1) throw new SaveException("UnsupportedSchema", "Unsupported save schema.");
                 var expected = new HashSet<string>(new[] { "format", "schemaVersion", "simulationVersion", "contentVersion", "payloadByteLength", "payloadSha256", "payload" }, StringComparer.Ordinal);
                 foreach (var property in root.EnumerateObject())
                     if (!expected.Remove(property.Name)) throw new SaveException("Corrupt", "Unknown envelope key: " + property.Name);
                 if (expected.Count != 0) throw new SaveException("Corrupt", "Missing envelope keys.");
-                if (root.GetProperty("format").GetString() != "harvest-codex-save") throw new SaveException("Corrupt", "Invalid format.");
-                if (root.GetProperty("schemaVersion").GetInt32() != 1) throw new SaveException("UnsupportedSchema", "Unsupported save schema.");
                 var payload = root.GetProperty("payload").GetString()!;
                 var payloadBytes = Utf8.GetBytes(payload);
                 if (root.GetProperty("payloadByteLength").GetInt32() != payloadBytes.Length || root.GetProperty("payloadSha256").GetString() != Hash(payloadBytes))

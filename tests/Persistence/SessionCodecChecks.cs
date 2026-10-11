@@ -50,6 +50,7 @@ internal static class SessionCodecChecks
         Mutate(root => { var script = root["scripts"]![0]!.DeepClone(); var many = new JsonArray(); for (int i = 0; i < 17; i++) many.Add(script.DeepClone()); root["scripts"] = many; }, "LimitExceeded");
         Mutate(root => root["executionState"] = "paused", "InvalidSnapshot");
         Mutate(root => root["sessionSchemaVersion"] = 2, "UnsupportedSchema");
+        Mutate(root => { root["sessionSchemaVersion"] = 2; root["futureSessionField"] = true; }, "UnsupportedSchema");
         Mutate(root => root.Remove("world"), "Corrupt");
         reject(() => codec.Decode(SaveEnvelope.Create("sim-future", "content-spike-1", encoded.Payload)), "IncompatibleSimulation");
         reject(() => codec.Decode(SaveEnvelope.Create("sim-spike-1", "content-future", encoded.Payload)), "IncompatibleSimulation");
@@ -68,6 +69,12 @@ internal static class SessionCodecChecks
             check(selected.World.RngState == 12345u, "Explicit semantic recovery returns fresh valid stopped DTO");
             store.Save("farm", encoded);
             check(codec.Decode(SaveEnvelope.Decode(File.ReadAllBytes(Path.Combine(directory, "farm.save.bak")))).World.RngState == 12345u, "Semantically corrupt primary preserves valid backup");
+            var futureSession = JsonNode.Parse(encoded.Payload)!.AsObject();
+            futureSession["sessionSchemaVersion"] = 2; futureSession["futureSessionField"] = true;
+            var futureBytes = SaveEnvelope.Create("sim-spike-1", "content-spike-1", futureSession.ToJsonString()).Encode();
+            File.WriteAllBytes(Path.Combine(directory, "farm.save"), futureBytes);
+            reject(() => store.Save("farm", encoded), "UnsupportedSchema");
+            check(File.ReadAllBytes(Path.Combine(directory, "farm.save")).SequenceEqual(futureBytes), "Future expanded session preserved");
             // A future configuration is preserved rather than overwritten by a current save.
             var incompatible = SaveEnvelope.Create("future-sim", "content-spike-1", encoded.Payload).Encode();
             File.WriteAllBytes(Path.Combine(directory, "farm.save"), incompatible);
