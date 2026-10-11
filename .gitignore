@@ -1,0 +1,7 @@
+.worktrees/
+**/bin/
+**/obj/
+game/Library/
+game/Temp/
+game/Logs/
+.DS_Store
