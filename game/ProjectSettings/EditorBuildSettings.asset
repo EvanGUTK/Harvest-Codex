@@ -4,6 +4,9 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Harvest/Presentation/Workspace.unity
+    guid: 2f7557af5e9d44a45ada62b4cb3b2055
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

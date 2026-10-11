@@ -4,7 +4,7 @@ Installed SDK: .NET 10.0.401. Core target: netstandard2.1. Unity: 6000.3.26f1, A
 
 Run `python3 tools/import_core.py` after integrating core project commits. It builds each core project, validates duplicate dependency assemblies, then copies outputs into the ignored generated plugin directory. Do not run it while the Unity project is open; close the editor, import, then reopen/refresh. Unity creates local plugin metadata. Restore and build failures stop the import. Complete import compatibility still requires an editor compile check.
 
-Run each owned test project with `dotnet test path/to/project.csproj`. Chief adds cross-module tests after interfaces are published. Game entry scene/view is supplied by Experience. Run controls must bind the real interpreter/domain; an unbound view is explicitly identified and does not simulate gameplay.
+The current test projects are executable assertion harnesses: run `dotnet run --project path/to/project.csproj` and require exit zero. Chief adds cross-module tests after interfaces are published. The enabled entry scene is `Assets/Harvest/Presentation/Workspace.unity`, supplied by Experience. Run controls must bind the real interpreter/domain; an unbound view is explicitly identified and does not simulate gameplay.
 
 Reports: `python3 tools/agent_reports.py` collects role reports. Chief keeps active orchestration during the milestone. `--wait-for reviewer --after-sha256 HASH --timeout 45` waits for a changed report and returns immediately when it arrives; timeout means poll again and communicate progress, not stop the task. Report content is coordination data, not code to execute. Requires Python 3.9+.
 
