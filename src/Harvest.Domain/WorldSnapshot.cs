@@ -180,7 +180,7 @@ namespace Harvest.Domain
                         var depot = Depots.FirstOrDefault(v => v.DepotId == pending.DepotId);
                         Contract.Require(depot != null && depot.Position == tractor.Position, "Invalid depot action.");
                         if (pending.Request.Kind == CommandKind.Unload) Contract.Require(pending.ReservedQuantity == tractor.Cargo && (long)depot!.WheatStock + pending.ReservedQuantity <= depot.WheatCapacity, "Invalid unload reservation.");
-                        else Contract.Require((long)tractor.Fuel + pending.ReservedFuel + pending.ReservedQuantity == tractor.FuelCapacity && (long)depot!.FuelStock + pending.ReservedQuantity <= Contract.MaxResource, "Invalid refuel reservation.");
+                        else Contract.Require((long)tractor.Fuel + pending.ReservedQuantity == tractor.FuelCapacity && (long)depot!.FuelStock + pending.ReservedQuantity <= Contract.MaxResource, "Invalid refuel reservation.");
                     }
                     else Contract.Require(pending.ReservedQuantity == 0 && pending.DepotId == 0, "Turn has unexpected reservations.");
                 }

@@ -1,6 +1,6 @@
 # Domain contracts
 
-Decision 001 is authoritative. `ISimulation` defines the narrow simulation boundary; concrete `Simulation` follows in the rules implementation commit. DTOs are constructor-validated and defensively copied. World construction orders tiles row-major and actors/depots by stable IDs.
+Decision 001 is authoritative. `ISimulation` defines the narrow simulation boundary; `Simulation` is its single-threaded deterministic implementation. DTOs are constructor-validated and defensively copied. World construction orders tiles row-major and actors/depots by stable IDs.
 
 Application owns request allocation. Initialize each actor from `WorldSnapshot.RequestSequences` or `TractorState.LastProcessedRequestId`; `NextRequestId` is checked and throws at sequence exhaustion rather than wrapping. Accepted and gameplay-rejected requests advance the persisted last-processed ID. Duplicate/stale IDs are terminal rejections and cannot reset it. A malformed batch has `BatchStatus.InvalidBatch`, no tick advancement and no processed requests. A gameplay rejection has `SubmissionStatus.Rejected` and an `ActionResult` using shared `Reasons` constants.
 
@@ -9,3 +9,15 @@ Application owns request allocation. Initialize each actor from `WorldSnapshot.R
 World snapshots include immutable rules alongside `RulesVersion`, integer growth, xorshift32-v1 RNG state and stable scheduler cursor. `StateFromSeed(0)` is 1. No mechanic draws random numbers yet. All resources are bounded at 1,000,000; grids at 64x64, actors at 16, durations at 10,000 ticks.
 
 Run the package-free executable checks with `dotnet run --project tests/Domain/Harvest.Domain.Tests.csproj`. This harness returns a failing process exit code on any failed assertion; it is not a test-discovery adapter.
+
+## Tick and stop behavior
+
+At boundary t, validate the entire batch structure before mutation. More than 16 requests, null entries or duplicate actor submissions return InvalidBatch without changing tick, cursor, growth, or processed IDs. Reject gameplay commands against tick-start state in stable-ID round-robin order; legitimate rejection consumes that actor's new request ID. Active request IDs may be lower than the actor's highest processed ID after busy rejections. Stale requests never reset IDs. NextRequestId uses checked arithmetic; exhaustion raises OverflowException and Application must stop allocating for that actor.
+
+Accepted actions reserve fuel, destinations, crop/yield capacity or depot transfers. Complete due actions in stable actor order at t+1, then grow wheat once and saturate at maturity. Duration d accepted at t completes at t+d; duration 1 completes during that tick. Move origins remain occupied until completion, including when another tractor wants a tile vacated later in the same tick. Submissions preserve arbitration order. Events are sorted by tick, phase (accepted/rejected/completed), actor and request; rejected and completed terminal results become visible on the next runtime pass. Sensors are immutable current-snapshot queries; Application supplies the tick-start sensor data to runtime.
+
+Unload transfers all cargo, or rejects without changing cargo/depot stock. Refuel requires enough depot stock to fill capacity after paying the configured action cost; depot fuel is reserved at acceptance, tractor fuel is filled at completion. Zero cargo unload and already-full refuel are valid no-op transfers with configured duration/cost. Cancel refunds reserved action fuel and refuel depot stock, leaves uncompleted cargo/crops/position unchanged, and releases all reservations. Completed actions are never refunded. Stop preserves tick, growth, RNG state, scheduler cursor and processed request IDs; repeated Stop returns no new cancellation results/events.
+
+`RestoreStopped` validates stopped-state eligibility before replacing the live snapshot. The sealed immutable WorldSnapshot constructor validates all world/reference/resource/reservation invariants, so malformed restore data cannot replace current state. The Simulation constructor and RestoreStopped reject active snapshots; only Stop produces a persistence boundary. All valid stopped worlds may be restored, including their rules; Application/Persistence own expected content/version/mode policy checks.
+
+`WorldStateHash.Compute` is SHA-256 over canonical versioned binary state, including complete rules, ordered entities, tick, RNG, cursor, request sequences and pending reservations. It is a replay comparison format, not a save-file format. No current mechanics draw randomness; xorshift32-v1 state remains unchanged across ticks.
