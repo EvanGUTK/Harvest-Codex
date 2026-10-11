@@ -4,4 +4,7 @@
 game/Library/
 game/Temp/
 game/Logs/
+game/UserSettings/
+game/Assets/Harvest/Plugins/Generated/
+game/Assets/Harvest/Plugins/Generated.meta
 .DS_Store
