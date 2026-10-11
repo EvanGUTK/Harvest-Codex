@@ -24,7 +24,8 @@ namespace Harvest.Persistence
         internal static string Text(JsonElement parent, string key, int maximum)
         {
             var value = parent.GetProperty(key).GetString();
-            if (value == null || value.Length > maximum) throw new SaveException("Corrupt", "Invalid string: " + key);
+            if (value == null) throw new SaveException("Corrupt", "Invalid string: " + key);
+            if (value.Length > maximum) throw new SaveException("LimitExceeded", "String exceeds bound: " + key);
             return value;
         }
         internal static T EnumValue<T>(JsonElement parent, string key) where T : struct, Enum

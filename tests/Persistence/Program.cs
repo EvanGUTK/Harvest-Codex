@@ -24,6 +24,7 @@ internal static class Program
     private static void Main()
     {
         WorldCodecChecks.Run(Check, Reject);
+        SessionCodecChecks.Run(Check, Reject);
         var encoded = Envelope(0).Encode();
         Check(SaveEnvelope.Decode(encoded).Payload == Envelope(0).Payload, "Envelope roundtrip");
         var text = Encoding.UTF8.GetString(encoded);

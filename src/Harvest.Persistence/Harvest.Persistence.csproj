@@ -1,4 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>netstandard2.1</TargetFramework><LangVersion>9.0</LangVersion><Nullable>enable</Nullable><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile></PropertyGroup>
-  <ItemGroup><ProjectReference Include="../Harvest.Domain/Harvest.Domain.csproj" /><PackageReference Include="System.Text.Json" Version="[10.0.0]" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../Harvest.Domain/Harvest.Domain.csproj" /><ProjectReference Include="../Harvest.Application/Harvest.Application.csproj" /><PackageReference Include="System.Text.Json" Version="[10.0.0]" /></ItemGroup>
 </Project>

@@ -62,7 +62,17 @@
         "resolved": "4.6.3",
         "contentHash": "7sCiwilJLYbTZELaKnc7RecBBXWXA+xMLQWZKWawBxYjp6DBlSE3v9/UcvKBvr1vv2tTOhipiogM8rRmxlhrVA=="
       },
+      "harvest.application": {
+        "type": "Project",
+        "dependencies": {
+          "Harvest.Domain": "[1.0.0, )",
+          "Harvest.Language": "[1.0.0, )"
+        }
+      },
       "harvest.domain": {
+        "type": "Project"
+      },
+      "harvest.language": {
         "type": "Project"
       }
     }
