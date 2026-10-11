@@ -8,3 +8,4 @@ game/UserSettings/
 game/Assets/Harvest/Plugins/Generated/
 game/Assets/Harvest/Plugins/Generated.meta
 .DS_Store
+__pycache__/
