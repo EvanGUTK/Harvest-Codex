@@ -27,6 +27,8 @@ internal static class ContractChecks
         Reject(() => new TickInput(0, sensor, null, null!, () => 1)); Reject(() => new TickInput(0, sensor, null, Capabilities.All, null!));
         Reject(() => new TickInput(0, null!, null, Capabilities.All, () => 1));
         Reject(() => new SourceSpan(-1, 1, 1, 1)); Reject(() => new SourceSpan(0, 1, 0, 1));
+        Reject(() => new Capabilities(RepeatedNames()));
         return checks;
     }
+    private static IEnumerable<string> RepeatedNames() { while (true) yield return "harvest"; }
 }

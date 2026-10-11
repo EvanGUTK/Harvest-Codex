@@ -24,7 +24,7 @@ namespace Harvest.Language
     public sealed class Capabilities
     {
         private readonly HashSet<string> allowed;
-        public Capabilities(IEnumerable<string> names) { if (names == null) throw new ArgumentNullException(nameof(names)); allowed = new HashSet<string>(StringComparer.Ordinal); foreach (string name in names) { if (string.IsNullOrEmpty(name) || name.Length > 64 || allowed.Count >= 64) throw new ArgumentException("Capabilities must be bounded nonempty names.", nameof(names)); allowed.Add(name); } }
+        public Capabilities(IEnumerable<string> names) { if (names == null) throw new ArgumentNullException(nameof(names)); allowed = new HashSet<string>(StringComparer.Ordinal); int count = 0; foreach (string name in names) { if (++count > 64 || string.IsNullOrEmpty(name) || name.Length > 64) throw new ArgumentException("Capabilities must be bounded nonempty names.", nameof(names)); allowed.Add(name); } }
         public bool Allows(string name) => allowed.Contains(name);
         public static Capabilities All => new Capabilities(new[] { "assignment", "arithmetic", "conditions", "for", "while", "move_forward", "turn_left", "turn_right", "harvest", "unload", "refuel", "sense", "position", "fuel", "cargo", "wait", "log", "range" });
     }

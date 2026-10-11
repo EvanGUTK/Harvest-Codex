@@ -22,7 +22,7 @@ namespace Harvest.Language
         private readonly Dictionary<string, LoopState> loops = new Dictionary<string, LoopState>();
         private readonly List<object> stack = new List<object>();
         private int pc; private long pendingId, wakeTick = -1, lastTick = -1, lastRequestId;
-        private ExecutionStatus status = ExecutionStatus.Ready; private Diagnostic? fault; private SourceSpan span;
+        private ExecutionStatus status = ExecutionStatus.Ready; private Diagnostic? fault; private SourceSpan span = new SourceSpan(0, 0, 1, 1);
         internal Execution(CompiledProgram program, long actorId)
         { if (actorId <= 0) throw new ArgumentOutOfRangeException(nameof(actorId)); this.program = program; this.actorId = actorId; }
         public ExecutionStatus Status => status;
