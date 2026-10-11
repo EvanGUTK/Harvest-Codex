@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "creator": "Harvest Codex Creative agent",
+  "method": "original hand-authored SVG geometric primitives",
+  "externalSources": [],
+  "thirdPartyAttribution": null,
+  "rights": "Project-original contribution; no third-party asset license. Project distribution license remains Chief-owned.",
+  "referenceImages": [],
+  "assets": [
+    {
+      "file": "tractor-north.svg",
+      "sha256": "05aef1b8178677340a80a26e9f932cfe100d688bd1872fb061f0c3a8473e338c",
+      "role": "tractor-north"
+    },
+    {
+      "file": "wheat-growing.svg",
+      "sha256": "2712524c19be8115a7184970c4ae2c5a26f5932fc23131e839f9da8d757318af",
+      "role": "wheat-growing"
+    },
+    {
+      "file": "wheat-ripe.svg",
+      "sha256": "eb1cd4ab05f87ec20869b1300e317433f8e9900d93ac5493d8e8c642fb906ce5",
+      "role": "wheat-ripe"
+    },
+    {
+      "file": "soil-empty.svg",
+      "sha256": "7ebee4788a72ce4fff64ec579a8cd38b40bdcf8f3e9bfbc97a0d16e987574897",
+      "role": "soil-empty"
+    },
+    {
+      "file": "depot.svg",
+      "sha256": "e43abb118588af6aa1e09f7ab1a14428bff3a67d651490d95036efa458457f87",
+      "role": "depot"
+    },
+    {
+      "file": "icon-run.svg",
+      "sha256": "e5dad35b9550d73c717313a17f72ed502648178ddaa2611547e91a753af41db1",
+      "role": "icon-run"
+    },
+    {
+      "file": "icon-pause.svg",
+      "sha256": "b1df9617eb8f4ae68a976f79040c19317766893e8752ba68f45481365ebe4a8a",
+      "role": "icon-pause"
+    },
+    {
+      "file": "icon-step.svg",
+      "sha256": "01fbc81e97842ac142b5ef88c33c63dec3589dc18bbac303a865fd1e2beebf4c",
+      "role": "icon-step"
+    },
+    {
+      "file": "icon-stop.svg",
+      "sha256": "99d2d33f4aded9c386af2dd6273d388fa45b3a863ee359bc22fe316e2e24c255",
+      "role": "icon-stop"
+    },
+    {
+      "file": "icon-warning.svg",
+      "sha256": "11c1dffdcd96a9c17a157aa293a43e751651d35e1968fbae8d82e173d96f5d83",
+      "role": "icon-warning"
+    }
+  ]
+}
