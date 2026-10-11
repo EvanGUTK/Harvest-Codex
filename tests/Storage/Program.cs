@@ -31,7 +31,7 @@ internal static class Program
     }
     private static void Main()
     {
-        RoundtripAndNamespaces(); StopAndFailures(); Recovery(); InvalidInputs();
+        RoundtripAndNamespaces(); StopAndFailures(); Recovery(); InvalidInputs(); OfferEdgeChecks();
         Console.WriteLine("PASS: " + checks + " storage facade assertions with actual controller, language, simulation and disk.");
     }
     private static void RoundtripAndNamespaces()
@@ -184,6 +184,50 @@ internal static class Program
                 try { new SessionStorage(controller, invalid, Codec()); throw new Exception("Expected invalid root"); }
                 catch (ArgumentException) { checks++; }
             }
+        });
+    }
+    private static void OfferEdgeChecks()
+    {
+        WithRoot(root =>
+        {
+            var controller = Controller(); var storage = new SessionStorage(controller, root, Codec());
+            controller.Draft = "previous"; storage.Save(); controller.Draft = "current"; storage.Save();
+            var primary = Path.Combine(root, "campaign", "farm.save"); var backup = primary + ".bak";
+            File.WriteAllText(primary, "broken");
+            var id = storage.Load().RecoveryChoices.Single().Id;
+            var originalPayload = SaveEnvelope.Decode(File.ReadAllBytes(backup)).Payload;
+            File.AppendAllText(backup, " ");
+            Check(SaveEnvelope.Decode(File.ReadAllBytes(backup)).Payload == originalPayload, "Replacement byte test remains valid with identical payload");
+            var before = Identity(controller); var changed = storage.Recover(id);
+            Outcome(changed, StorageStatus.Failed, root);
+            Check(changed.Code == "ChangedRecovery" && Identity(controller) == before, "Identity pins exact bytes, not only payload semantics");
+            id = storage.Load().RecoveryChoices.Single().Id;
+            var priorPrimary = File.ReadAllBytes(primary); var priorBackup = File.ReadAllBytes(backup);
+            controller.Draft = "\uD800"; // Application permits this code unit; persistence rejects invalid Unicode.
+            var failed = storage.Save(); Outcome(failed, StorageStatus.Failed, root);
+            Check(failed.Code == "InvalidSnapshot" && controller.Status == SessionStatus.Stopped, "Expected encoding failure leaves session stopped");
+            Check(File.ReadAllBytes(primary).SequenceEqual(priorPrimary) && File.ReadAllBytes(backup).SequenceEqual(priorBackup), "Failed save preserves prior primary and backup bytes");
+            var expired = storage.Recover(id); Outcome(expired, StorageStatus.Failed);
+            Check(expired.Code == "StaleRecovery", "Failed Save invalidates old offer even with intact candidate");
+            controller.Draft = "move_forward()";
+            id = storage.Load().RecoveryChoices.Single().Id; Check(controller.Run(), "Run for failed Load invalidation"); before = Identity(controller);
+            Outcome(storage.Load(), StorageStatus.Failed);
+            Check(Identity(controller) == before, "Rejected active Load leaves execution/state unchanged");
+            controller.Stop(); expired = storage.Recover(id); Outcome(expired, StorageStatus.Failed);
+            Check(expired.Code == "StaleRecovery", "Rejected active Load invalidates old offers");
+            id = storage.Load().RecoveryChoices.Single().Id; controller.Run(); controller.Pause(); before = Identity(controller);
+            Outcome(storage.Recover(id), StorageStatus.Failed); Check(Identity(controller) == before, "Paused Recover does not stop or replace state");
+            controller.Stop(); Outcome(storage.Recover(id), StorageStatus.Failed);
+            id = storage.Load().RecoveryChoices.Single().Id;
+            Outcome(storage.Recover(new string('x', 100000)), StorageStatus.Failed);
+            Outcome(storage.Recover(id), StorageStatus.Failed);
+            Outcome(storage.Recover(null!), StorageStatus.Failed);
+            // Mode-switch integration invalidates even an A->B->A switch between calls.
+            id = storage.Load().RecoveryChoices.Single().Id;
+            controller.RestoreStopped(FirstFarm.Create(SessionMode.Sandbox)); storage.InvalidateRecovery();
+            controller.RestoreStopped(FirstFarm.Create(SessionMode.Campaign)); storage.InvalidateRecovery();
+            expired = storage.Recover(id); Outcome(expired, StorageStatus.Failed);
+            Check(expired.Code == "StaleRecovery", "Explicit mode-switch invalidation handles A-B-A");
         });
     }
     private sealed class ExplodingFactory : IProgramFactory
