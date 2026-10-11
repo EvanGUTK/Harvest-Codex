@@ -67,8 +67,7 @@ namespace Harvest.Presentation
                 var names = layout.HasInspector ? new[] { "Code", "Farm", "Reference" } : new[] { "Code", "Farm", "Reference", "Tractor" };
                 activeTab = GUILayout.Toolbar(Mathf.Min(activeTab,names.Length-1),names,GUILayout.Height(layout.LineHeight));
             }
-            var panels = GUILayoutUtility.GetRect(layout.ContentWidth,layout.PanelHeight,GUILayout.Width(layout.ContentWidth),GUILayout.Height(layout.PanelHeight));
-            DrawPanels(state, layout, panels);
+            DrawPanels(state, layout);
             GUILayout.Label("Diagnostics (line / column supplied by runtime)");
             diagnosticScroll = GUILayout.BeginScrollView(diagnosticScroll, GUILayout.Height(80 * preferences.TextScale));
             if (draftError.Length > 0) Wrapped(draftError);
@@ -83,33 +82,39 @@ namespace Harvest.Presentation
             GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
-        private void DrawPanels(SessionViewState state, WorkspaceLayout layout, Rect area)
+        private void DrawPanels(SessionViewState state, WorkspaceLayout layout)
         {
-            // Independent areas clip intrinsic text widths before any sibling allocation occurs.
-            // GetRect returns a placeholder during Layout; use the allocated height for both GUI passes.
+            // Keep panels in the body's normal layout flow, after storage/settings/tabs.
+            // Fixed widths prevent reference content from competing with sibling panes;
+            // each pane's own scroll view clips long content within the allocated height.
+            var panelStyle = new GUIStyle(GUI.skin.box) { margin = new RectOffset(0,0,0,0) };
+            GUILayout.BeginHorizontal(GUILayout.Width(layout.ContentWidth),GUILayout.Height(layout.PanelHeight));
             if (!layout.Tabbed)
             {
-                GUILayout.BeginArea(RectFor(area.x,area.y,layout.EditorWidth,layout.PanelHeight),GUI.skin.box);
+                GUILayout.BeginVertical(panelStyle,GUILayout.Width(layout.EditorWidth),GUILayout.Height(layout.PanelHeight));
                 if (showReference) Reference(); else Editor(state);
-                GUILayout.EndArea();
-                float farmX=area.x+layout.EditorWidth+WorkspaceLayout.Gap;
-                GUILayout.BeginArea(RectFor(farmX,area.y,layout.FarmWidth,layout.PanelHeight),GUI.skin.box);
+                GUILayout.EndVertical();
+                GUILayout.Space(WorkspaceLayout.Gap);
+                GUILayout.BeginVertical(panelStyle,GUILayout.Width(layout.FarmWidth),GUILayout.Height(layout.PanelHeight));
                 Farm(state);
-                GUILayout.EndArea();
-                GUILayout.BeginArea(RectFor(farmX+layout.FarmWidth+WorkspaceLayout.Gap,area.y,layout.InspectorWidth,layout.PanelHeight),GUI.skin.box);
-                Inspector(state); GUILayout.EndArea();
+                GUILayout.EndVertical();
+                GUILayout.Space(WorkspaceLayout.Gap);
+                GUILayout.BeginVertical(panelStyle,GUILayout.Width(layout.InspectorWidth),GUILayout.Height(layout.PanelHeight));
+                Inspector(state); GUILayout.EndVertical();
             }
             else
             {
-                GUILayout.BeginArea(RectFor(area.x,area.y,layout.TabContentWidth,layout.PanelHeight),GUI.skin.box);
+                GUILayout.BeginVertical(panelStyle,GUILayout.Width(layout.TabContentWidth),GUILayout.Height(layout.PanelHeight));
                 switch (activeTab) { case 1: Farm(state); break; case 2: Reference(); break; case 3: Inspector(state); break; default: Editor(state); break; }
-                GUILayout.EndArea();
+                GUILayout.EndVertical();
                 if (layout.HasInspector)
                 {
-                    GUILayout.BeginArea(RectFor(area.x+layout.TabContentWidth+WorkspaceLayout.Gap,area.y,layout.InspectorWidth,layout.PanelHeight),GUI.skin.box);
-                    Inspector(state); GUILayout.EndArea();
+                    GUILayout.Space(WorkspaceLayout.Gap);
+                    GUILayout.BeginVertical(panelStyle,GUILayout.Width(layout.InspectorWidth),GUILayout.Height(layout.PanelHeight));
+                    Inspector(state); GUILayout.EndVertical();
                 }
             }
+            GUILayout.EndHorizontal();
         }
         private static void Wrapped(string text) => GUILayout.Label(text,new GUIStyle(GUI.skin.label) { wordWrap=true });
         private void StorageDetails(WorkspaceLayout layout)
