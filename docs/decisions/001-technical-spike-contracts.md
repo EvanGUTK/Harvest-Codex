@@ -1,0 +1,54 @@
+# Decision 001: technical spike contracts
+
+Status: Chief-selected contract; independent review required before implementation tasks. Scope: one tractor, wheat harvest, movement, turning, fuel/cargo/depot, safe player code, session controls, stopped saves and primitive Unity presentation.
+
+## Tooling and ownership
+
+Unity 6000.3.26f1 Apple Silicon, changeset de8167e7440c; Hub 3.22.2. Installation and batchmode project creation succeeded. Core libraries target netstandard2.1, C# 9-compatible conventional classes (no host-specific APIs or init-only records). Tests target net10.0 with installed SDK 10.0.401. Chief owns root build configuration, SDK pin, solution, core-to-Unity import tooling, game ProjectSettings/Packages, and tests/Integration. Workers own individual project/test files within assigned module directories. Pin exact package versions; Unity package manifest/lock is established through actual editor resolution.
+
+Simulation owns Domain and all shared world/action DTOs. Runtime owns Language and its interpreter contracts. Experience owns Application including session orchestration, runtime-to-domain gateway, capability policy and Presentation. Persistence depends on Domain/Application snapshot contracts and owns disk schemas, validators and I/O. Domain must not depend on Application, Language, Unity or Persistence. Application must not depend on concrete Persistence: expose stopped snapshot capture/restore; external wiring coordinates storage.
+
+Creative owns docs/creative and future game/Assets/Harvest/Art and Audio, including their metadata after coordinated import conventions. Experience owns scenes/UI views and their metadata. Chief approves creative state/event handoff; primitive graphics and silence satisfy spike asset scope. Creative's existing direction commit 17d2716 requires review before integration.
+
+## Domain contracts and tick semantics
+
+Use immutable constructor-validated DTOs and defensive collection copies. Actor/request IDs and tick are nonnegative signed 64-bit integers; active actor IDs and request IDs are positive. Request IDs increase per actor; Domain stores last accepted/processed request ID to reject duplicates. Coordinates are zero-based integers, x east and y north; no wrap. Heading is North/East/South/West. Domain provides:
+
+- WorldSnapshot: rulesVersion, tick, grid, tiles, stable-ID tractor states, depot stocks, current RNG state and algorithm/version, scheduler nextActorId, request sequence state, pending action views.
+- SensorSnapshot: position, heading, ripe (bool), crop type or none, fuel, cargo, implement. Immutable reads reflect tick-start state.
+- CommandRequest: actorId, requestId, kind, bounded arguments. Initial kinds MoveForward, TurnLeft, TurnRight, Harvest, Unload, Refuel. Wait is a Runtime wait, not a world command.
+- ActionResult: actorId, requestId, ok, reason, terminalTick. Stable lower-case reason codes; success reason `none`. Rejection is a terminal result. Domain events contain tick, actor/request IDs, kind and authoritative outcome.
+- Simulation.AdvanceTick(commandBatch) -> TickReport(snapshot, submission outcomes, terminal results, ordered events). At most one submission per actor per tick. Invalid batch structure rejects the batch without advancing/mutating; legitimate gameplay rejection advances the tick normally.
+- Simulation.StopAtBoundary() -> stopped snapshot and cancellation events; repeated calls are idempotent. RestoreStopped validates all invariants before replacing simulation state.
+
+At snapshot t, Application resumes bounded runtime continuations and collects proposals. Domain arbitrates against snapshot t in stable-ID round-robin order, reserves resources/cells, completes actions due at t+1, grows crops once, then publishes t+1. Duration d accepted at t completes at t+d. Results become visible on the next runtime pass; no submission repeats while waiting. Rejected actions also yield until the next pass. Sensors never see effects later in the current tick. Check tick arithmetic for overflow.
+
+One active action per tractor. Movement retains origin occupancy and reserves destination until completion; reject occupied/blocked/out-of-bounds destinations. No queued moves or overlapping/head-on swaps in this spike. Cursor advances deterministically each tick and is preserved by Stop and save/load. Resource reservations move available quantities to reserved quantities; completion consumes once, cancellation refunds all unused reservations exactly once. Harvest reserves crop/yield capacity; harvested wheat enters cargo. Unload transfers all cargo into depot stock with checked capacity/accounting, otherwise rejects atomically. Refuel fills to tractor capacity from depot fuel stock, otherwise rejects atomically. Both require depot location. No partial transfer in this spike.
+
+Starter limits: grid <=64x64, actors <=16, resource quantities/capacities <=1,000,000, positive durations <=10,000 ticks. Wheat maturity is integer bounded growth; harvest clears crop, and regrowth belongs to explicit rules data rather than a UI effect. Initial field starts planted; planting is later scope. Action costs/durations/growth rates are immutable validated rules data, never tutorial-specific hidden overrides. Use deterministic xorshift32-v1 RNG with nonzero uint32 state and fixed seed-to-state mapping; zero seed maps to state 1. Avoid random draws until a mechanic actually needs them. Snapshot includes current state, not just original seed.
+
+## Runtime contracts and safety
+
+Compile(source, capabilities, limits) returns immutable program or source diagnostics. Start binds a program to one actor and private variables. Resume consumes tick-start sensor data and prior terminal results and returns one of Ready, WaitingAction, WaitingTick, Completed, Faulted or Stopped, plus optional proposed CommandRequest, bounded logs and active source span. Application submits the proposal to Domain and routes results back on the next pass. Runtime never directly mutates the world.
+
+Minimal syntax: integers, bounded strings, booleans, assignment, arithmetic/comparisons, boolean operators, if/else, for over lazy range(n), while, allowlisted calls and immutable result/sensor field access. Checked signed 64-bit arithmetic; strict boolean conditions; integer floor division and matching remainder. No imports/classes/host eval, arbitrary member access, floats, function definitions, lists or recursion in this spike. Unsupported constructs produce explicit diagnostics. Campaign only advertises implemented features.
+
+API names: move_forward, turn_left, turn_right, harvest, unload, refuel, sense, position, fuel, cargo, wait, log. Action calls yield until a terminal ActionResult; script sees `.ok` and `.reason`. Queries are immutable tick-start values. wait(n) takes 1..1,000,000 ticks and uses checked wake-tick arithmetic. Gameplay rejections are values; syntax/type/capability errors fault only the offending program. Domain revalidates command legality; gateway rechecks mode capabilities.
+
+Limits: source 64 KiB UTF-8; tokens 8192; AST nodes 4096; parse/expression depth 64; instructions 256/program/tick; max 16 programs; variables 256; live value cells 4096; strings 4096 UTF-8 bytes; range count <=1,000,000; 16 logs/tick, 256 UTF-8 bytes/log; 32 compile diagnostics. Bound lexer/parser traversal, builtin/formatting work and intermediate allocation as well as instruction dispatch. No total-lifetime instruction cap: valid farming loops run indefinitely while yielding each tick. Log truncation reports truncation and cannot allocate an unlimited formatted value first. Source spans use 1-based line/column and zero-based character offsets.
+
+## Application, modes and save boundary
+
+SessionController owns Stopped/Running/Paused, compiled active source distinct from editable draft, tick pump and capability policy. Run from Stopped validates/starts; Run from Paused resumes; Pause freezes time and clears real-time backlog. Step while Paused executes exactly one complete tick and remains Paused. Stop cancels without an extra growth tick, clears continuations and retains farm/scripts. Save captures the same stopped boundary. Loading replaces a fully validated stopped session; it never starts scripts automatically.
+
+Campaign initially exposes sequential calls, then counted loops; completion grants the next teaching capabilities. Sandbox is immediately available and exposes every implemented feature, with identical safety limits. Save namespaces and eligibility are separate. Sandbox modifiers are explicit and cannot bypass runtime limits. Application computes objectives from authoritative snapshots/events.
+
+StoppedSessionSnapshot includes mode, simulation/content IDs, world, policies/progress/modifiers, draft script text and actor assignments. Domain world includes RNG/cursor/tick/request sequences and no active actions/reservations after Stop. Persistence owns explicit v1 JSON DTOs, bounded UTF-8 parsing and file replacement. Store script text inert; parser errors do not prevent recovering a farm.
+
+Save file <=16 MiB, JSON depth <=64, script source <=64 KiB each and <=1 MiB aggregate, preferences <=64 KiB, objective/log history bounded by content schema. Reject unknown/duplicate structural keys, invalid IDs/references/numbers/mode/version and active execution state before live-session replacement. Use same-directory exclusive temp, flush and validate, preserve valid previous backup, then atomic replacement; never delete primary first. Keep interrupted-write recovery explicit and report platform durability limits honestly. Persistence must prove file primitives work on target framework and macOS; Windows smoke remains pending until run there.
+
+## Implementation dispatch and acceptance
+
+After Reviewer accepts this contract SHA, Chief supplies a common contract baseline and file ownership. Simulation publishes Domain contracts first; Runtime may build lexer/parser in parallel without inventing Domain APIs. Experience consumes Domain/Language contracts for Application and gateway. Persistence consumes stable stopped DTOs. Chief owns integration assembly/import. All workers commit atomic changes, report exact SHA and checks, and do not update main/push. Reviewer reviews the integrated candidate; only Chief advances main to the approved SHA.
+
+Acceptance: deterministic timing/resource conservation/replay; rejected commands without partial effects; infinite-loop responsiveness; source and allocation bounds; pause/step/stop; campaign/sandbox gating; stopped-save roundtrip and corruption/recovery; actual Unity tractor/editor/control demonstration. Test core separately, but do not substitute core tests for visible acceptance. Creative contrast/audio/accessibility checks remain explicitly incomplete until implemented and exercised.
