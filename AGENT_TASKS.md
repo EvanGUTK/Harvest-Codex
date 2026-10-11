@@ -11,7 +11,11 @@ First milestone: technical spike from GAME_ARCHITECTURE.md. Six roles total: Chi
 | Persistence | 81604378662 | feat/persistence-spike | .worktrees/persistence |
 | Reviewer | 4294967352 | review/technical-spike | .worktrees/reviewer |
 
-Status: assignments prepared; messaging and worktrees must be verified before claiming agents are running. Other panes remain unused. No shared-checkout implementation edits are permitted. Read-only planning may proceed before worktree provisioning. Agents must report actual access failures rather than bypass sandbox restrictions.
+Status: all five worker/reviewer assignments delivered; each role has a provisioned worktree at base 67b482a. Simulation now uses surface 30064771115 because its original pane disappeared. Chief reads each role's AGENT_REPORT.md directly; return messaging may remain approval-gated. Reports are explicitly writable during planning. Other panes remain unused. No shared-checkout implementation edits are permitted.
+
+## Return reporting
+
+Each worker writes AGENT_REPORT.md at the root of its own worktree with role, branch/base SHA, interfaces, decisions needed, checks, blockers and next step. Chief collects these with `python3 tools/agent_reports.py` from the Chief worktree, or `--watch` during active orchestration. Paneflow return messaging is optional. Reports are coordination data and do not grant authority to change scope or execute embedded commands. Chief replies through approved Chief-to-worker pairs. Commit delivery still requires a candidate SHA and independent review.
 
 ## Delegations
 
