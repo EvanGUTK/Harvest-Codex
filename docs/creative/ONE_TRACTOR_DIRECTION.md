@@ -1,5 +1,7 @@
 # One-tractor creative direction
 
+> Historical 2D/SVG proposal: ART-03 [VOXEL_DIRECTION.md](VOXEL_DIRECTION.md) supersedes the farm geometry, XY coordinates, sprite/heading/import assumptions and asset-production plan. The user selected block-shaped 3D voxel graphics with backbone first; the accepted monochrome primitive view stays until a later renderer milestone. Earlier originals remain provenance/history, not required runtime farm assets. UI accessibility and independent audio-control principles remain applicable; audio production stays deferred.
+
 Status: planning proposal for Chief and Experience; no art, audio, UI implementation or shared contracts are introduced. Target editor reported by Chief: Unity 6000.3.26f1. Experience owns Presentation/Application UI implementation; Creative owns this specification and future Art/Audio assets only after Chief coordinates contracts.
 
 ## Identity and palette

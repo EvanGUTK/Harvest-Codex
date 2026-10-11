@@ -1,5 +1,7 @@
 # ART-02 implementation handoff v1
 
+> Historical 2D/SVG proposal: ART-03 [VOXEL_DIRECTION.md](VOXEL_DIRECTION.md) supersedes the farm geometry, XY coordinates, sprite/heading/import assumptions and asset-production plan. The user selected block-shaped 3D voxel graphics with backbone first; the accepted monochrome primitive view stays until a later renderer milestone. Earlier originals remain provenance/history, not required runtime farm assets. UI accessibility and independent audio-control principles remain applicable; audio production stays deferred.
+
 Authority: Chief delegation ART-02 and decision 001 at baseline 17d383369442fe9271d92f53ec472a8f105cc6d6. This is a presentation-local specification. It introduces no Domain/Application DTOs or event names. Experience owns scene/UI and binding code; Creative owns these originals and metadata. Source SVGs remain in docs/creative/primitives until Experience/Chief chooses the import route. No Unity package installation or game metadata was performed.
 
 ## Exact art tokens and geometry
