@@ -4,6 +4,8 @@ Read GAME_ARCHITECTURE.md and AGENT_TASKS.md before work. Chief assigns ownershi
 
 Make atomic commits with related meaningful tests and docs. Report commit SHA, checks and risks to Chief. Do not update main or push unless Chief delegates it. Independent Reviewer reviews the exact integrated candidate SHA; fixes return to owners and require renewed review. Chief alone advances main to the approved candidate and pushes normally. Never force push or destructively reset.
 
+Launch development players in a window, using `-screen-fullscreen 0 -screen-width 1280 -screen-height 800` when opening existing builds. Do not launch fullscreen unless the user explicitly requests it.
+
 ## Active orchestration
 
 Chief keeps the work cycle active until the assigned milestone is delivered or a concrete user decision/access blocker prevents progress. Finishing a proposal, review, or worker task is a handoff, not the end of the overall task. Chief reads report changes, resolves routine decisions, issues the next assignments, integrates candidate commits and requests exact-SHA review without waiting for the user to ask for status. If a user answer is required, ask promptly with the blocker and continue independent work.
