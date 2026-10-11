@@ -162,7 +162,7 @@ namespace Harvest.Domain
                 var tractor = Tractor(pending.Request.ActorId);
                 Contract.Require(Enum.IsDefined(typeof(CommandKind), pending.Request.Kind), "Unknown pending command.");
                 var rule = Rules.For(pending.Request.Kind);
-                Contract.Require(pending.Request.RequestId == tractor.LastProcessedRequestId && pending.StartTick <= Tick && pending.CompletionTick > Tick && pending.CompletionTick - pending.StartTick == rule.DurationTicks && pending.ReservedFuel == rule.FuelCost && InBounds(pending.Target), "Invalid pending sequence/timing/reservation.");
+                Contract.Require(pending.Request.RequestId <= tractor.LastProcessedRequestId && pending.StartTick <= Tick && pending.CompletionTick > Tick && pending.CompletionTick - pending.StartTick == rule.DurationTicks && pending.ReservedFuel == rule.FuelCost && InBounds(pending.Target), "Invalid pending sequence/timing/reservation.");
                 Contract.Require((long)tractor.Fuel + pending.ReservedFuel <= tractor.FuelCapacity, "Reserved fuel exceeds capacity.");
                 if (pending.Request.Kind == CommandKind.MoveForward)
                 {
