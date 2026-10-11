@@ -36,7 +36,8 @@ namespace Harvest.Persistence
         private readonly Action<SaveEnvelope> validatePayload;
         public AtomicSlotStore(string existingDirectory, Action<SaveEnvelope> validatePayload, ISlotFiles? files = null)
         {
-            directory = System.IO.Path.GetFullPath(existingDirectory).TrimEnd(System.IO.Path.DirectorySeparatorChar);
+            var fullDirectory = System.IO.Path.GetFullPath(existingDirectory);
+            directory = fullDirectory == System.IO.Path.GetPathRoot(fullDirectory) ? fullDirectory : fullDirectory.TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
             gate = Gates.GetOrAdd(directory, _ => new object());
             this.validatePayload = validatePayload ?? throw new ArgumentNullException(nameof(validatePayload));
             this.files = files ?? new PhysicalSlotFiles();
@@ -89,6 +90,7 @@ namespace Harvest.Persistence
                     for (int i = 0; i < Math.Min(temps.Length, 64); i++) TryCandidate(temps[i], candidates, diagnostics);
                 }
                 catch (IOException ex) { throw new SaveException("IoFailure", "Recovery scan failed.", ex); }
+                catch (UnauthorizedAccessException ex) { throw new SaveException("IoFailure", "Recovery scan access denied.", ex); }
                 return new SlotLoadResult(null, error, candidates, diagnostics);
             }
         }

@@ -23,6 +23,7 @@ internal static class Program
     }
     private static void Main()
     {
+        StoreErrorChecks.Run(Check, Reject);
         WorldCodecChecks.Run(Check, Reject);
         SessionCodecChecks.Run(Check, Reject);
         var encoded = Envelope(0).Encode();
