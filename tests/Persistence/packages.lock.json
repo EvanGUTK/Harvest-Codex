@@ -7,9 +7,13 @@
         "resolved": "10.0.0",
         "contentHash": "1Dpjwq9peG/Wt5BNbrzIhTpclfOSqBWZsUO28vVr59yQlkvL5jLBWfpfzRmJ1OY+6DciaY0DUcltyzs4fuZHjw=="
       },
+      "harvest.domain": {
+        "type": "Project"
+      },
       "harvest.persistence": {
         "type": "Project",
         "dependencies": {
+          "Harvest.Domain": "[1.0.0, )",
           "System.Text.Json": "[10.0.0, 10.0.0]"
         }
       }

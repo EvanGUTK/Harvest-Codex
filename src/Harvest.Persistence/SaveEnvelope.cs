@@ -76,7 +76,7 @@ namespace Harvest.Persistence
         }
         private static string Hash(byte[] bytes)
         { using var sha = SHA256.Create(); return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(); }
-        private static JsonDocument ValidateJson(byte[] bytes, bool objectRoot)
+        internal static JsonDocument ValidateJson(byte[] bytes, bool objectRoot)
         {
             if (bytes.Length > MaxFileBytes) throw new SaveException("LimitExceeded", "JSON exceeds file bound.");
             Utf8.GetCharCount(bytes); // Reject invalid UTF-8 before parsing.
