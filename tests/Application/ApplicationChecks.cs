@@ -81,6 +81,18 @@ real.Step(); if(!real.Console.Contains("done") || real.World.Tick != 3 || real.W
 var realSave=real.CaptureStopped(); real.RestoreStopped(realSave);
 if(real.World.Tick != 3 || real.Status != SessionStatus.Stopped || real.Draft != realSave.Scripts[0].Draft) throw new Exception("Real stopped capture/restore");
 Console.WriteLine("Concrete Domain + Language + Application harvest/pause/step/stop/progression passed");
+// EXP-02: test through the actual view/session setter, including multibyte boundary.
+var retained = view.Draft;
+if(Harvest.Presentation.DraftEdit.TryApply(new string('é',32769),text => view.Draft=text,out var editError) ||
+    view.Draft != retained || !editError.Contains("Previous draft retained")) throw new Exception("Oversized multibyte draft was not visibly rejected/retained");
+if(!Harvest.Presentation.DraftEdit.TryApply(new string('é',32768),text => view.Draft=text,out editError) ||
+    view.Draft != new string('é',32768) || editError != "") throw new Exception("Exact UTF-8 boundary was rejected or truncated");
+retained = view.Draft;
+if(Harvest.Presentation.DraftEdit.TryApply(new string('a',65537),text => view.Draft=text,out editError) || view.Draft != retained)
+    throw new Exception("Oversized ASCII edit was truncated or committed");
+if(!Harvest.Presentation.DraftEdit.TryApply("recovered draft",text => view.Draft=text,out editError) || editError != "" || view.Draft != "recovered draft")
+    throw new Exception("Subsequent valid edit did not recover/clear warning");
+Console.WriteLine("UTF-8 edit rejection, retained draft, exact limit and recovery checks passed");
 sealed class FakeFactory : IProgramFactory
 {
     public bool FailCompile;

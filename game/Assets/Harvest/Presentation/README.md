@@ -17,3 +17,5 @@ Find the scene's `HarvestWorkspace` component and call its public `Bind(IHarvest
 For saving, external wiring calls controller.CaptureStopped() and passes the immutable payload to the Persistence adapter, then storage; no save button is implemented until that adapter is integrated. Loading validates the complete DTO before controller.RestoreStopped(snapshot). A rejected Domain restore preserves the current session. Stop/save clears continuations and keeps world tick.
 
 Actual binding maps ripe/growing/soil and depot labels from world data, tractor heading/position/resources/pending action from authoritative snapshots, and source diagnostics from Language. Current graphics are text/primitives with immediate state updates. Audio and final contrast/rendered accessibility acceptance remain deferred.
+
+Editor edits are validated against the shared 64 KiB UTF-8 source limit before assigning either bound or unbound drafts. Oversized paste is rejected in full with a persistent diagnostic; previous source is retained without truncation. The warning clears after a valid edit. TextArea has no character truncation limit; the byte guard rejects the candidate instead.

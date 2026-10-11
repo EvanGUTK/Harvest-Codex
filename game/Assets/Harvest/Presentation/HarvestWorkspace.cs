@@ -7,6 +7,7 @@ namespace Harvest.Presentation
     {
         private IHarvestSessionView? session;
         private string unboundDraft = "";
+        private string draftError = "";
         private readonly PresentationPreferences preferences = new PresentationPreferences();
         private Vector2 editorScroll, diagnosticScroll, consoleScroll;
         private int narrowTab;
@@ -47,6 +48,7 @@ namespace Harvest.Presentation
             if (narrow) Inspector(state);
             GUILayout.Label("Diagnostics (line / column supplied by runtime)");
             diagnosticScroll = GUILayout.BeginScrollView(diagnosticScroll, GUILayout.Height(75));
+            if (draftError.Length > 0) GUILayout.Label(draftError);
             GUILayout.Label(state.Diagnostics);
             GUILayout.EndScrollView();
             GUILayout.Label("Event console");
@@ -70,8 +72,9 @@ namespace Harvest.Presentation
             editorScroll = GUILayout.BeginScrollView(editorScroll);
             var draft = session?.Draft ?? unboundDraft;
             GUI.SetNextControlName("Program draft");
-            var edited = GUILayout.TextArea(draft, 65536, GUILayout.ExpandHeight(true), GUILayout.MinHeight(180));
-            if (edited != draft) { if (session != null) session.Draft = edited; else unboundDraft = edited; }
+            var edited = GUILayout.TextArea(draft, GUILayout.ExpandHeight(true), GUILayout.MinHeight(180));
+            if (edited != draft)
+                DraftEdit.TryApply(edited, value => { if (session != null) session.Draft = value; else unboundDraft = value; }, out draftError);
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
         }
