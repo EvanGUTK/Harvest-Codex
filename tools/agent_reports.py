@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 import time
 
-ROLES = ("simulation", "runtime", "experience", "persistence", "reviewer")
+ROLES = ("simulation", "runtime", "experience", "persistence", "reviewer", "creative")
 
 
 def collect(root: Path, seen: dict[str, str]) -> None:

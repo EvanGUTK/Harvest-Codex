@@ -146,16 +146,18 @@ Write a validated temporary file, flush it, then atomically replace the destinat
 
 Meaningful tests cover crop transitions, resource accounting, determinism, parser/runtime diagnostics, budget exhaustion, capability gating, action cancellation, save recovery, campaign reachability and sandbox isolation. A replay with the same seed, inputs and version must produce the same state hash. Profile the intended largest map and fleet before locking numeric performance goals. Do not claim checks passed before an implementation exists.
 
-## Chief and five visible Paneflow panes
+## Chief and seven visible Paneflow panes
 
-Target five panes total, including Chief. A visible pane must host a real agent session; internal subagents are not a substitute for visible Paneflow panes.
+Current target: seven panes total including Chief, four builders, Creative, and independent Reviewer. A visible pane must host a real agent session; internal subagents are not a substitute for visible Paneflow panes.
 
 | Pane | Role | Branch example | Ownership |
 | --- | --- | --- | --- |
 | Chief | Orchestrates, defines interfaces, delegates, integrates approved changes | `integration/current` | Task ledger, architecture, integration |
 | Simulation | Builds tractor and crop simulation | `feat/simulation-slice` | Domain and its tests |
 | Runtime | Builds safe language and tractor API integration | `feat/runtime-slice` | Language and its tests |
-| Experience | Builds editor, campaign, sandbox and persistence | `feat/experience-slice` | Presentation/application/content/persistence |
+| Experience | Builds editor, campaign and sandbox | `feat/experience-slice` | Presentation/application/content |
+| Persistence | Builds save/load and recovery | `feat/persistence-slice` | Persistence and its tests |
+| Creative | Designs UI/UX, visuals, art, SFX and music | `feat/creative-direction` | Design specifications and Art/Audio assets |
 | Reviewer | Independently reviews and verifies exact candidate commits | `review/current` | Findings and acceptance evidence |
 
 Chief assigns tasks with objective, owned paths, interface contract, dependencies, acceptance checks and base commit. Workers stay within their assigned worktree, commit small coherent changes, and report commit SHA, checks run and unresolved risks. Shared contract changes require coordination before edits. Add agents only when work warrants them and visible capacity is available; keep a dedicated independent reviewer.
@@ -176,8 +178,8 @@ Keep domain rules centralized and module dependencies explicit. Use named types,
 
 ### Paneflow operation and current setup limits
 
-Paneflow exposes discovery/read/search and approval-gated agent messaging through MCP. Pane creation requires the local CLI or app. The [Paneflow documentation](https://github.com/arthjean/paneflow/blob/main/docs/user/conductor.md) describes declarative workspaces and orchestration. Verify the installed version's schema before preparing a workspace specification. After launch, Chief verifies all five surface IDs, names and working directories; it must not claim panes are open until discovery confirms them. Authorize agent pairs in Paneflow when its messaging gate requires it.
+Paneflow exposes discovery/read/search and approval-gated agent messaging through MCP. Pane creation requires the local CLI or app. The [Paneflow documentation](https://github.com/arthjean/paneflow/blob/main/docs/user/conductor.md) describes declarative workspaces and orchestration. Verify the installed version's schema before preparing a workspace specification. After launch, Chief verifies all assigned surface IDs, names and working directories; it must not claim assigned panes are open until discovery confirms them. Authorize agent pairs in Paneflow when its messaging gate requires it.
 
-At document creation, this workspace had one Codex pane. The CLI could not reach the local host because the sandbox denied socket access. Git initialization also failed because writing `.git` is prohibited by the current filesystem policy. Consequently no Git commits, branches, worktrees, remote configuration or five-pane fleet have been created. The remote URL remains unspecified. This document is saved locally; those operational setup steps remain pending access and remote information. Implementation is future work, not an implied completed game.
+Historical setup: initial pane creation and Git initialization were blocked by the original sandbox policy. After the user lifted that policy, Chief initialized Git, configured origin, pushed the bootstrap and provisioned isolated worktrees. The earlier blockers are resolved. Implementation is future work, not a completed game.
 
-Setup update (2026-10-11): GitHub OAuth now verifies the private repository `EvanGUTK/Harvest-Codex`, with clone URL `https://github.com/EvanGUTK/Harvest-Codex.git` and default branch `main`. Paneflow discovery shows eight Codex surfaces total (Chief plus seven additional panes), all currently using the same project directory. Separate worktrees and role assignments are still pending; pane presence alone does not establish independent task execution. The local project is still not a Git repository, and the current filesystem policy still prohibits writing `.git`.
+Current setup update: Git is initialized, origin is configured, and bootstrap 67b482a is pushed. Chief, Simulation, Runtime, Experience, Persistence, Reviewer and Creative have isolated worktrees. Original agents returned proposals through report files. Creative delivery awaits Paneflow pair approval. Unity Hub 3.22.2 is installed; Unity editor installation is not yet verified complete.
