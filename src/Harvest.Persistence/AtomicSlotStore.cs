@@ -84,8 +84,9 @@ namespace Harvest.Persistence
                 try
                 {
                     var temps = files.FindTemps(directory, slot + "."); Array.Sort(temps, StringComparer.Ordinal);
-                    if (temps.Length > 64) throw new SaveException("LimitExceeded", "Too many temporary recovery files; archive old artifacts explicitly.");
-                    foreach (var temp in temps) TryCandidate(temp, candidates, diagnostics);
+                    if (temps.Length > 64)
+                        diagnostics.Add(new RecoveryDiagnostic(directory, "LimitExceeded"));
+                    for (int i = 0; i < Math.Min(temps.Length, 64); i++) TryCandidate(temps[i], candidates, diagnostics);
                 }
                 catch (IOException ex) { throw new SaveException("IoFailure", "Recovery scan failed.", ex); }
                 return new SlotLoadResult(null, error, candidates, diagnostics);

@@ -94,7 +94,30 @@ internal static class Program
             var result = new AtomicSlotStore(directory, Validate).Load("slot");
             Check(result.Primary == null && result.RecoveryCandidates.Count == 1, "First-write orphan temp explicit");
             File.WriteAllText(Path.Combine(directory, "slot.broken.tmp"), "partial");
-            Check(new AtomicSlotStore(directory, Validate).Load("slot").RecoveryCandidates.Count == 1, "Partial temp excluded");
+            var withPartial = new AtomicSlotStore(directory, Validate).Load("slot");
+            Check(withPartial.RecoveryCandidates.Count == 1, "Partial temp excluded");
+            Check(withPartial.RecoveryDiagnostics.Count == 1 && withPartial.RecoveryDiagnostics[0].Code == "Corrupt", "Partial temp diagnosis surfaced");
+        });
+        foreach (bool corruptInsteadOfThrow in new[] { false, true })
+        WithDirectory(directory =>
+        {
+            var normal = new AtomicSlotStore(directory, Validate);
+            normal.Save("slot", Envelope(0)); normal.Save("slot", Envelope(1));
+            var failing = new AtomicSlotStore(directory, Validate, new PartialFiles(corruptInsteadOfThrow));
+            Reject(() => failing.Save("slot", Envelope(2)), corruptInsteadOfThrow ? "Corrupt" : "IoFailure");
+            Check(normal.Load("slot").Primary!.Payload == Envelope(1).Payload, "Partial/corrupt temp did not install");
+            Check(SaveEnvelope.Decode(File.ReadAllBytes(Path.Combine(directory, "slot.save.bak"))).Payload == Envelope(0).Payload, "Partial/corrupt temp did not replace backup");
+        });
+        WithDirectory(directory =>
+        {
+            var store = new AtomicSlotStore(directory, Validate);
+            store.Save("slot", Envelope(0)); store.Save("slot", Envelope(1));
+            File.WriteAllText(Path.Combine(directory, "slot.save"), "bad");
+            for (int i = 0; i < 70; i++) File.WriteAllText(Path.Combine(directory, "slot." + i + ".tmp"), "bad");
+            var result = store.Load("slot");
+            Check(result.RecoveryCandidates.Count == 1, "Excess orphan temps preserve backup option");
+            Check(result.RecoveryDiagnostics.Any(d => d.Code == "LimitExceeded"), "Recovery scan bound diagnosed");
+            Check(result.RecoveryDiagnostics.Count <= 65, "Recovery scan allocation bounded");
         });
         WithDirectory(directory =>
         {
@@ -110,6 +133,21 @@ internal static class Program
         var directory = Path.Combine(Path.GetTempPath(), "harvest-persistence-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         try { action(directory); } finally { Directory.Delete(directory, true); }
+    }
+    private sealed class PartialFiles : ISlotFiles
+    {
+        private readonly PhysicalSlotFiles inner = new PhysicalSlotFiles();
+        private readonly bool corruptInsteadOfThrow;
+        public PartialFiles(bool corruptInsteadOfThrow) { this.corruptInsteadOfThrow = corruptInsteadOfThrow; }
+        public bool Exists(string path) => inner.Exists(path);
+        public byte[] ReadBounded(string path, int maximumBytes) => inner.ReadBounded(path, maximumBytes);
+        public string[] FindTemps(string directory, string prefix) => inner.FindTemps(directory, prefix);
+        public void InstallAtomic(string temporary, string destination) => inner.InstallAtomic(temporary, destination);
+        public void WriteExclusiveAndFlush(string path, byte[] bytes)
+        {
+            inner.WriteExclusiveAndFlush(path, bytes.Take(bytes.Length / 2).ToArray());
+            if (!corruptInsteadOfThrow) throw new IOException("Injected partial write");
+        }
     }
     private sealed class FaultFiles : ISlotFiles
     {
