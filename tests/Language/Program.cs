@@ -128,6 +128,7 @@ internal static class Program
             var span = LanguageCompiler.Compile("# 😀\r\nlog(\"x\")\r\nfoo()\n", Capabilities.All).Diagnostics.Single().Span;
             Check(span.Line == 3 && span.Column == 1 && span.Offset == 16, "UTF-16 offsets and CRLF line numbers: " + span.Offset);
             checks += ContractChecks.Run();
+            checks += ReferenceChecks.Run();
             Console.WriteLine("PASS " + checks + " checks"); return 0;
         }
         catch (Exception e) { Console.Error.WriteLine(e); return 1; }
