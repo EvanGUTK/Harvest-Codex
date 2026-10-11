@@ -4,17 +4,26 @@ using System.Collections.Generic;
 using System.Linq;
 using Harvest.Application;
 using Harvest.Domain;
+using Harvest.Language;
 namespace Harvest.Presentation
 {
-    public sealed class ApplicationSessionView : IHarvestSessionView
+    public sealed class ApplicationSessionView : IHarvestSessionView, ISessionStorageView, IProgrammingReferenceView
     {
         private readonly SessionController controller;
+        private readonly StorageInteraction storageInteraction;
         private readonly Func<SessionMode, StoppedSessionSnapshot> createSession;
         private readonly Dictionary<SessionMode, StoppedSessionSnapshot> modes = new Dictionary<SessionMode, StoppedSessionSnapshot>();
-        public ApplicationSessionView(SessionController controller, Func<SessionMode, StoppedSessionSnapshot> createSession)
-        { this.controller = controller; this.createSession = createSession; }
+        public ApplicationSessionView(SessionController controller, Func<SessionMode, StoppedSessionSnapshot> createSession, ISessionStorage? storage = null)
+        { this.controller = controller; this.createSession = createSession; storageInteraction = new StorageInteraction(controller, storage); }
+        public StorageViewState ReadStorage() => storageInteraction.Read();
+        public void Save() => storageInteraction.Save();
+        public void RequestLoad() => storageInteraction.RequestLoad();
+        public void RequestRecovery(string id) => storageInteraction.RequestRecovery(id);
+        public void ConfirmReplacement() => storageInteraction.Confirm();
+        public void CancelReplacement() => storageInteraction.Cancel();
+        public IReadOnlyList<ReferenceEntry> ReadReference() => LanguageReference.Available(ModePolicy.For(controller.Mode, controller.CampaignChapter));
         public string Draft { get => controller.Draft; set => controller.Draft = value; }
-        public void Run() => controller.Run();
+        public void Run() { storageInteraction.Invalidate(); controller.Run(); }
         public void Pause() => controller.Pause();
         public void Step() => controller.Step();
         public void Stop() => controller.Stop();
@@ -30,6 +39,7 @@ namespace Harvest.Presentation
             var previous = controller.CaptureStopped();
             controller.RestoreStopped(destination);
             modes[previous.Mode] = previous;
+            storageInteraction.Invalidate();
         }
         public SessionViewState Read()
         {
@@ -46,7 +56,7 @@ namespace Harvest.Presentation
                 cells[index] = new CellView(depot.Position.X, depot.Position.Y, cells[index].Label + "\nDepot");
             }
             var diagnostics = string.Join("\n", controller.Diagnostics.Select(d => "⚠ " + d.Code + " line " + d.Span.Line + ", column " + d.Span.Column + ": " + d.Message));
-            var status = controller.Status == SessionStatus.Running ? ExecutionStatus.Running : controller.Status == SessionStatus.Paused ? ExecutionStatus.Paused : ExecutionStatus.Stopped;
+            var status = controller.Status == SessionStatus.Running ? Harvest.Presentation.ExecutionStatus.Running : controller.Status == SessionStatus.Paused ? Harvest.Presentation.ExecutionStatus.Paused : Harvest.Presentation.ExecutionStatus.Stopped;
             string objective = controller.Mode == SessionMode.Sandbox ? "Sandbox: all implemented capabilities; standard bounded execution. No compulsory objectives." :
                 controller.CampaignChapter == 0 ? "First harvest: harvest and unload wheat at a depot." : "Counted loops available. Working rows: practice traversing the field.";
             return new SessionViewState(true, status, controller.Mode == SessionMode.Campaign ? FarmMode.Campaign : FarmMode.Sandbox,

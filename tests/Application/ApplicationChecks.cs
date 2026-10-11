@@ -93,6 +93,7 @@ if(Harvest.Presentation.DraftEdit.TryApply(new string('a',65537),text => view.Dr
 if(!Harvest.Presentation.DraftEdit.TryApply("recovered draft",text => view.Draft=text,out editError) || editError != "" || view.Draft != "recovered draft")
     throw new Exception("Subsequent valid edit did not recover/clear warning");
 Console.WriteLine("UTF-8 edit rejection, retained draft, exact limit and recovery checks passed");
+StorageViewChecks.Run();
 sealed class FakeFactory : IProgramFactory
 {
     public bool FailCompile;
