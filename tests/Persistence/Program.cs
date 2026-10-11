@@ -23,6 +23,7 @@ internal static class Program
     }
     private static void Main()
     {
+        SimulationReplayChecks.Run(Check, Reject);
         StoreErrorChecks.Run(Check, Reject);
         WorldCodecChecks.Run(Check, Reject);
         SessionCodecChecks.Run(Check, Reject);
