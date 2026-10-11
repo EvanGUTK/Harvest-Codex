@@ -19,3 +19,5 @@ foreach (var status in Enum.GetValues<ExecutionStatus>())
 try { _ = new SessionViewState(true, ExecutionStatus.Stopped, FarmMode.Campaign, 0, 1, 1, new[] { new CellView(1, 0, "") }, null, "", "", "", ""); throw new Exception("Invalid coordinate accepted"); }
 catch (ArgumentException) { }
 Console.WriteLine("Presentation state checks passed");
+
+LayoutChecks.Run();
