@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace Harvest.Language
 {
-    internal enum Op { Push, Load, Store, Pop, Unary, Binary, Field, Call, Jump, JumpFalse, ShortAnd, ShortOr, RangeStart, RangeNext }
+    internal enum Op { Push, PushArithmetic, Load, Store, Pop, Unary, Binary, Field, Call, Jump, JumpFalse, ShortAnd, ShortOr, RangeStart, RangeNext }
     internal sealed class Instruction
     {
         internal Op Op; internal object? Arg; internal int Target; internal SourceSpan Span;
@@ -37,7 +37,15 @@ namespace Harvest.Language
         private int cursor, nodes, depth, loopId;
         internal Parser(List<Token> tokens, Capabilities capabilities) { this.tokens = tokens; this.capabilities = capabilities; }
         private Token Current => tokens[cursor];
-        private bool Is(string value) => Current.Kind == value || Current.Text == value;
+        private bool Is(string value)
+        {
+            switch (value)
+            {
+                case "if": case "else": case "while": case "for": case "in": case "range":
+                    return Current.Kind == "name" && Current.Text == value;
+                default: return Current.Kind == value;
+            }
+        }
         private Token Take() => tokens[cursor++];
         private bool Match(string value) { if (!Is(value)) return false; Take(); return true; }
         private Token Need(string value) { if (!Is(value)) Error("unexpected_token", "Expected " + value + "."); return Take(); }
@@ -85,30 +93,32 @@ namespace Harvest.Language
             Enter(); Prefix();
             while (true)
             {
-                string op = Current.Text; int precedence = Precedence(op); if (precedence < min) break;
+                string op = Operator(Current); int precedence = Precedence(op); if (precedence < min) break;
                 Token token = Take(); Gate(op == "and" || op == "or" ? "conditions" : "arithmetic", token.Span);
                 if (op == "and" || op == "or")
                 { int jump = Emit(op == "and" ? Op.ShortAnd : Op.ShortOr, null, token.Span); Expression(precedence + 1); Emit(Op.Unary, "bool", token.Span); code[jump].Target = code.Count; }
                 else { Expression(precedence + 1); Emit(Op.Binary, op, token.Span); }
-                if (precedence == 3 && Precedence(Current.Text) == 3) Error("unsupported_syntax", "Chained comparisons are unsupported; use and.");
+                if (precedence == 3 && Precedence(Operator(Current)) == 3) Error("unsupported_syntax", "Chained comparisons are unsupported; use and.");
             }
             depth--;
         }
         private static int Precedence(string op)
         { switch (op) { case "or": return 0; case "and": return 1; case "==": case "!=": case "<": case "<=": case ">": case ">=": return 3; case "+": case "-": return 4; case "*": case "//": case "%": return 5; default: return -1; } }
+        private static string Operator(Token token)
+            => token.Kind == "name" ? (token.Text == "and" || token.Text == "or" ? token.Text : "") : token.Kind;
         private void Prefix()
         {
             Token token = Take();
-            if (token.Text == "not" || token.Text == "-" || token.Text == "+")
+            if ((token.Kind == "name" && token.Text == "not") || token.Kind == "-" || token.Kind == "+")
             {
                 Gate(token.Text == "not" ? "conditions" : "arithmetic", token.Span);
-                if (token.Text == "-" && Current.Kind == "number" && Current.Text == "9223372036854775808") { Take(); Emit(Op.Push, long.MinValue, token.Span); }
+                if (token.Kind == "-" && Current.Kind == "number" && Current.Text == "9223372036854775808") { Take(); Emit(Op.PushArithmetic, long.MinValue, token.Span); }
                 else { Expression(token.Text == "not" ? 2 : 6); Emit(Op.Unary, token.Text, token.Span); }
             }
             else if (token.Kind == "number")
             { if (!long.TryParse(token.Text, NumberStyles.None, CultureInfo.InvariantCulture, out long value)) throw new LanguageError("numeric_overflow", "Integer is outside int64 range.", token.Span); Emit(Op.Push, value, token.Span); }
             else if (token.Kind == "string") Emit(Op.Push, token.Text, token.Span);
-            else if (token.Text == "True" || token.Text == "False") Emit(Op.Push, token.Text == "True", token.Span);
+            else if (token.Kind == "name" && (token.Text == "True" || token.Text == "False")) Emit(Op.Push, token.Text == "True", token.Span);
             else if (token.Kind == "(") { Expression(); Need(")"); }
             else if (token.Kind == "name")
             {

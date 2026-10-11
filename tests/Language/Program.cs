@@ -40,6 +40,22 @@ internal static class Program
             Check(Run("log(2 + 3 * 4)\nlog(-7 // 3)\nlog(-7 % 3)\nlog(7 // -3)\nlog(7 % -3)\n").SequenceEqual(new[] { "14", "-3", "2", "-3", "-2" }), "Arithmetic precedence/floor semantics");
             Check(Run("log(-9223372036854775808)\nlog(-9223372036854775808 % -1)\n").SequenceEqual(new[] { long.MinValue.ToString(), "0" }), "Minimum int64");
             Check(Run("log(not 1 == 2)\nlog(False and missing)\nlog(True or missing)\n").SequenceEqual(new[] { "True", "False", "True" }), "Short circuit and not precedence");
+            string[] syntaxLiterals = { ")", "(", ",", ".", ":", "+", "-", "*", "//", "%", "==", "not", "and", "or", "if", "else", "while", "for", "in", "range", "eof", "newline", "indent", "dedent", "name", "True", "False" };
+            foreach (string literal in syntaxLiterals)
+            {
+                Check(Run("log(\"" + literal + "\")\nlog(7)\n").SequenceEqual(new[] { literal, "7" }), "Literal content is data: " + literal);
+                var literalThenAction = Start("\"" + literal + "\"\nlog(7)\nharvest()\n").Resume(Input(0));
+                Check(literalThenAction.Logs.Single() == "7" && literalThenAction.Proposal?.ApiName == "harvest", "Literal cannot terminate or redirect following action: " + literal);
+            }
+            CompileError("for i in \"range\"(1):\n    log(i)\n", "unexpected_token");
+            CompileError("for i \"in\" range(1):\n    log(i)\n", "unexpected_token");
+            CompileError("log(1 \"+\" 2)\n", "unexpected_token");
+            foreach (string negative in new[] { "-1", "-9223372036854775808" })
+            {
+                RunSlice revoked = Start("log(" + negative + ")\n").Resume(Input(0, caps: new Capabilities(new[] { "log" })));
+                Check(revoked.Status == ExecutionStatus.Faulted && revoked.Diagnostic?.Code == "capability_locked" && revoked.Logs.Count == 0, "Revoked arithmetic gates negative literal: " + negative);
+                Check(revoked.Diagnostic!.Span.Line == 1 && revoked.Diagnostic.Span.Column == 5, "Folded unary gate retains source span");
+            }
             string loops = "total = 0\nfor row in range(3):\n    for col in range(2):\n        total = total + row + col\nif total == 9:\n    log(\"yes\")\nelse:\n    log(\"no\")\nwhile total < 12:\n    total = total + 1\nlog(total)\n";
             Check(Run(loops).SequenceEqual(new[] { "yes", "12" }), "Nested loops and if/else");
             Check(Run(loops, 1).SequenceEqual(Run(loops, 256)), "Determinism across instruction slices");

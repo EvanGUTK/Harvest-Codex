@@ -52,6 +52,7 @@ namespace Harvest.Language
                     switch (instruction.Op)
                     {
                         case Op.Push: Push(instruction.Arg!); break;
+                        case Op.PushArithmetic: Gate(input, "arithmetic"); Push(instruction.Arg!); break;
                         case Op.Load:
                             if (!variables.TryGetValue((string)instruction.Arg!, out object value)) throw Error("unknown_name", "Variable has not been assigned: " + instruction.Arg);
                             Push(value); break;
