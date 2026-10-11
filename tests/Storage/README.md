@@ -1,0 +1,9 @@
+# SAVE-02 storage boundary acceptance
+
+Run `dotnet run --project tests/Storage/StorageChecks.csproj -c Release`. This dependency-free net10.0 executable exits nonzero on failed assertions; its ProjectReference consumes Chief's approved Composition project and exact locked dependencies.
+
+Tests exercise SessionStorage against actual SessionController, LanguageProgramFactory, Domain Simulation, stopped-session codec and physical temporary storage. They verify cold roundtrips (farm, draft, chapter, selection, sequences), fixed campaign/sandbox namespaces, real multi-tick Stop/cancellation/refunds, active/paused load rejection, explicit backup/temp recovery, single-use opaque offer invalidation, replaced/removed/corrupt candidate identity rejection, wrong-mode/future/corrupt/missing saves, friendly path-free bounded messages, I/O failure, no partial live replacement, and propagation of unexpected programming failures.
+
+SessionStorage is synchronous and intended for Unity's session/UI thread. Constructor takes a trusted absolute root with a bounded path budget and does not create directories. Operations use campaign/farm and sandbox/farm through mode-aware stores. View mode switching must call InvalidateRecovery, including A→B→A transitions between facade operations; the controller has no change event. A direct current-mode mismatch is independently rejected. Recovery only restores explicitly selected exact offered bytes, revalidated on read; it does not promote an artifact to primary. A subsequent Save creates the current primary normally.
+
+The facade retains existing Persistence platform limits: macOS physical primitives tested; Windows smoke pending; no directory fsync or cross-process writer support. No schema changes, global preferences, new player launches or runtime rendering dependencies.
