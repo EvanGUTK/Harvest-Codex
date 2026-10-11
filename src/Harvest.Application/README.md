@@ -1,0 +1,5 @@
+# Application contracts
+
+`StoppedSessionSnapshot(mode, simulationId, contentId, world, campaignChapter, scripts, selectedActorId)` is the public immutable stopped payload for Persistence. `ScriptAssignment(actorId,draft)` holds inert source. Construction validates bounds, unique existing actor assignments, selection, stopped world and chapter range. Domain validates world/RNG/cursor/request sequences. Chapter 0 teaches sequential APIs; chapter 1 adds counted loops. Sandbox chapter is 0 and every supported language feature is granted. No sandbox modifiers are implemented in this spike; adapter must reject unsupported ones. Global audio/accessibility preferences are excluded.
+
+SessionController capture will Stop then create this DTO. Restore validates compatibility before calling ISimulation.RestoreStopped, whose contract validates before replacing; Application then replaces scripts/policy and leaves execution Stopped. Persistence owns JSON and I/O; Application never references concrete Persistence.

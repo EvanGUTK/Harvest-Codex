@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>netstandard2.1</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="../Harvest.Domain/Harvest.Domain.csproj"/><ProjectReference Include="../Harvest.Language/Harvest.Language.csproj"/></ItemGroup></Project>
