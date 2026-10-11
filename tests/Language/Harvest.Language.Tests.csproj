@@ -1,4 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType><StartupObject>ContractChecks</StartupObject><TargetFramework>net10.0</TargetFramework><LangVersion>9.0</LangVersion><Nullable>enable</Nullable></PropertyGroup>
+  <PropertyGroup><OutputType>Exe</OutputType><StartupObject>Program</StartupObject><TargetFramework>net10.0</TargetFramework><LangVersion>9.0</LangVersion><Nullable>enable</Nullable></PropertyGroup>
   <ItemGroup><ProjectReference Include="../../src/Harvest.Language/Harvest.Language.csproj" /></ItemGroup>
 </Project>
