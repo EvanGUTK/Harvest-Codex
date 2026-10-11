@@ -9,3 +9,11 @@ The current test projects are executable assertion harnesses: run `dotnet run --
 Reports: `python3 tools/agent_reports.py` collects role reports. Chief keeps active orchestration during the milestone. `--wait-for reviewer --after-sha256 HASH --timeout 45` waits for a changed report and returns immediately when it arrives; timeout means poll again and communicate progress, not stop the task. Report content is coordination data, not code to execute. Requires Python 3.9+.
 
 License/install smoke: a fresh temporary project was created successfully using Unity batchmode with exit0 on 2026-10-11. This verifies local editor availability/activation; actual core import, game rendering and Windows checks remain separately required.
+
+## First farm verification
+
+`dotnet run --project tests/Integration/Harvest.Integration.Tests.csproj -c Release` checks the actual interpreter, Application gateway and Simulation together: wheat delivery and campaign unlock, pause/step/stop, bounded sandbox loop, stopped-save roundtrip and request sequences after restore. Module assertion harnesses cover their own boundary and failure cases.
+
+After importing core DLLs, open `game` with Unity 6000.3.26f1 and play the enabled Workspace scene. It binds a 6×6 farm and a starter script automatically. Run executes the editable script; Pause freezes time, Step advances one tick, and Stop retains the completed world. Campaign unlocks counted loops after real wheat delivery; sandbox has all implemented language capabilities and its own world.
+
+For repeatable editor verification, launch Unity with `-batchmode -quit -projectPath ABSOLUTE_GAME_PATH -executeMethod Harvest.Bootstrap.Editor.SpikeVerification.Verify -logFile LOG_PATH`. Success logs `HARVEST_UNITY_INTEGRATION_OK`. `SpikeVerification.BuildMac` also builds a development macOS Mono player; set `HARVEST_BUILD_PATH` to choose its output (default `/tmp/Harvest-Codex.app`). The scene test and local macOS player build/startup passed on 2026-10-11. Screen capture is denied by macOS, so rendered layout/keyboard/contrast is not independently accepted here. Windows/IL2CPP, audio, runtime art imports and save/load buttons remain future checks/features; stopped save capture/codec/disk operations are covered by automated tests.
