@@ -11,6 +11,7 @@ namespace Harvest.Presentation
         private Vector2 editorScroll, diagnosticScroll, consoleScroll;
         private int narrowTab;
         public void Bind(IHarvestSessionView value) { session = value; }
+        private void Update() { if (session is ApplicationSessionView bound) bound.Pump(Time.unscaledDeltaTime); }
         private void OnGUI()
         {
             if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Tab && GUI.GetNameOfFocusedControl() == "Program draft")
