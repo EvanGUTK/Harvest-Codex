@@ -8,10 +8,10 @@ One tractor on a small field executes player-written code, moves, turns, harvest
 
 ## Sequence and ownership
 
-1. Chief reconciles the six-role ledger and historical setup status, pins build tooling, owns root solution/configuration, and writes a versioned contract decision. Reviewer checks the contract before parallel implementation.
+1. Chief reconciles the seven-role ledger and historical setup status, pins build tooling, owns root solution/configuration, and writes a versioned contract decision. Reviewer checks the contract before parallel implementation.
 2. Simulation defines Domain-owned immutable snapshots, commands, request IDs, action results and stop/cancel semantics, then implements domain rules. Runtime starts lexer/parser and bounded continuations in parallel using agreed contracts. These independent commits must build and include meaningful tests.
 3. Experience builds the pure Application session controller, capability policy and runtime-to-domain gateway. Chief owns cross-module integration tests. Presentation work follows identification and pinning of an available Unity editor; lack of an editor does not block core implementation, but does block visible-game acceptance.
-4. Persistence implements validated stopped-session save/load after snapshot contracts stabilize. Verify interrupted-write recovery and campaign/sandbox separation. Experience integrates editor controls and tractor visualization from authoritative snapshots.
+4. Creative owns docs/creative design handoff and Art/Audio assets with coordinated metadata/import conventions. Experience implements its layout from real state; primitive graphics and silence are acceptable for this spike. Persistence implements validated stopped-session save/load after snapshot contracts stabilize. Verify interrupted-write recovery and campaign/sandbox separation. Experience integrates editor controls and tractor visualization from authoritative snapshots.
 5. Chief assembles the candidate branch. Reviewer checks the exact candidate SHA, builds/tests and visible smoke evidence. Fixes return to owners. Chief advances main to the approved SHA and pushes normal atomic history.
 
 ## Contracts to settle first
@@ -39,4 +39,4 @@ Start with one tractor and one crop, a small bounded map and depot. Fuel/cargo m
 
 ## Current evidence
 
-Git origin is configured and the bootstrap architecture commit is pushed. Six worktrees exist; all worker/reviewer reports have arrived. The return-report collector is committed on Chief's branch and has reviewer approval with minor follow-up findings. .NET SDK 10.0.401 is installed. Experience did not locate Unity or Unity Hub in standard/indexed locations; confirm availability or arrange installation before presentation acceptance.
+Git origin is configured and the bootstrap architecture commit is pushed. Seven worktrees exist; all worker/reviewer reports have arrived. The return-report collector is committed on Chief's branch and has reviewer approval with minor follow-up findings. .NET SDK 10.0.401 is installed. Unity Hub3.22.2 and Apple Silicon Unity6000.3.26f1 are installed; a fresh batchmode project was created successfully with exit0. Core assembly import and game rendering are separate acceptance checks.
