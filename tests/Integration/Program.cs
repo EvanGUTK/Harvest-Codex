@@ -69,5 +69,6 @@ static class Program
         locked.Draft = sandbox.Draft;
         Require(!locked.Run() && locked.Diagnostics.Count > 0 && locked.World.Tick == 0, "Campaign rejects locked syntax before world mutation");
         Console.WriteLine("PASS real scripting/tractor delivery, pause/step/stop, campaign gates, save replay and bounded sandbox loop");
+        BackboneChecks.Run();
     }
 }
